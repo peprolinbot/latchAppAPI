@@ -40,6 +40,8 @@ class app:
     def __init__(self, PATH2_SESSION, deviceName="Python"):
         self.PATH2_SESSION = PATH2_SESSION
         self.deviceName = deviceName
+        self.headers = {'X-Client-Version': 'Android/2.2.4', 'X-device': self.deviceName}
+        self.cookies = {"PATH2_SESSION": self.PATH2_SESSION}
 
     def makeAuthedGetRequest(self, url):
         return makeGetRequest(url, self.PATH2_SESSION)
@@ -73,10 +75,8 @@ class app:
             state = "off" #Inversed the way the api considers states cause i think this is much more logical
         else:
             state = "on"
-        headers = {'X-Client-Version': 'Android/2.2.4'}
-        cookies =  {"PATH2_SESSION": self.PATH2_SESSION}
         data = {"status["+latchCode+"]": state}
-        r = requests.post("https://latch.elevenpaths.com/control/1.8/update", headers=headers, cookies=cookies, data=data)
+        r = requests.post("https://latch.elevenpaths.com/control/1.8/update", headers=self.headers, cookies=self.cookies, data=data)
         if r.status_code == 200:
             if "error" in r.json():
                 raise Exception("Session was closed")
@@ -92,10 +92,35 @@ class app:
         data = json['data']
         return data
 
-    def logoutSpecificSession(self, sessionCode):
+    def getPairingToken(self):
+        url = "https://latch.elevenpaths.com/control/1.8/pairingToken"
+        json = self.makeAuthedGetRequest(url)
+        data = json['data']
+        return data
+    
+    def addTotp(self, name, accountName, secret):
         headers = {'X-Client-Version': 'Android/2.2.4'}
         cookies =  {"PATH2_SESSION": self.PATH2_SESSION}
-        r = requests.delete("https://latch.elevenpaths.com/control/1.8/sessions/" + sessionCode, headers=headers, cookies=cookies)
+        data = {"name": name, "secret": secret, "accountName": accountName}
+        r = requests.post("https://latch.elevenpaths.com/control/1.8/totp", headers=self.headers, cookies=self.cookies, data=data)
+        if r.status_code == 200:
+            if "error" in r.json():
+                raise Exception("Session was closed")
+            return r.json()["data"]
+        else:
+            raise Exception("There was an error: Code " + str(r.status_code))
+
+    def removeTotp(self, latchCode):
+        r = requests.delete("https://latch.elevenpaths.com/control/1.8/totp/" + latchCode, headers=self.headers, cookies=self.cookies)
+        if r.status_code == 200:
+            if "error" in r.json():
+                raise Exception("Session was closed")
+            return
+        else:
+            raise Exception("There was an error: Code " + str(r.status_code))
+
+    def logoutSpecificSession(self, sessionCode):
+        r = requests.delete("https://latch.elevenpaths.com/control/1.8/sessions/" + sessionCode, headers=self.headers, cookies=self.cookies)
         if r.status_code == 200:
             if "error" in r.json():
                 raise Exception("Session was closed")
