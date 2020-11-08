@@ -23,12 +23,12 @@ def authenticate(user, password, deviceName="Python", deviceOsVersion=platform.p
     else:
         raise Exception("There was an error: Code " + str(r.status_code))
 
-def register(name, email, password, communicationsAllowed=False):
+def register(name, email, password, deviceName="Python", deviceOsVersion=platform.python_version(), communicationsAllowed=False):
     if communicationsAllowed:
         communicationsAllowed = "true"
     else:
         communicationsAllowed = "false"
-    headers = {'X-Client-Version': 'Android/2.2.4', 'X-device': deviceName}
+    headers = {'X-Client-Version': 'Android/2.2.4', 'X-device': deviceName, 'X-os-version': deviceOsVersion}
     data = {"password": password, "terms": "true", "communicationsAllowed": communicationsAllowed, "passwordCheck": password, "name": name, "email": email}
     r = requests.post("https://latch.elevenpaths.com/www/registerNative", headers=headers, data=data)
     if r.status_code == 200:
@@ -37,10 +37,11 @@ def register(name, email, password, communicationsAllowed=False):
         raise Exception("There was an error: Code " + str(r.status_code))
 
 class app:
-    def __init__(self, PATH2_SESSION, deviceName="Python"):
-        self.PATH2_SESSION = PATH2_SESSION
+    def __init__(self, user, password, deviceName="Python", deviceOsVersion=platform.python_version()):
+        self.PATH2_SESSION = authenticate(user, password, deviceName, deviceOsVersion)
         self.deviceName = deviceName
-        self.headers = {'X-Client-Version': 'Android/2.2.4', 'X-device': self.deviceName}
+        self.deviceOsVersion = deviceOsVersion
+        self.headers = {'X-Client-Version': 'Android/2.2.4', 'X-device': self.deviceName, 'X-os-version': self.deviceOsVersion}
         self.cookies = {"PATH2_SESSION": self.PATH2_SESSION}
 
     def makeAuthedGetRequest(self, url):
@@ -63,7 +64,18 @@ class app:
         json = self.makeAuthedGetRequest(url)
         data = json['data']
         return data
-    
+
+    def setAppPreferences(self, settingsDict):
+        settingsStr = str(settingsDict).replace("True", "true").replace("False", "true")
+        data = {"appPreferences": settingsStr}
+        r = requests.post("https://latch.elevenpaths.com/control/1.8/appPreferences", headers=self.headers, cookies=self.cookies, data=data)
+        if r.status_code == 200:
+            if "error" in r.json():
+                raise Exception("There was an error: " + str(r.json()['error']))
+            return
+        else:
+            raise Exception("There was an error: Code " + str(r.status_code))
+
     def getSessions(self):
         url = "https://latch.elevenpaths.com/control/1.8/sessions"
         json = self.makeAuthedGetRequest(url)
