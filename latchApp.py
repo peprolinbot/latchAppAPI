@@ -9,7 +9,7 @@ def makeGetRequest(url, PATH2_SESSION, deviceName="Python", deviceOsVersion=plat
     r = requests.get(url , headers=headers, cookies=cookies)
     if r.status_code == 200:
         if "error" in r.json():
-            raise Exception("Session was closed")
+            raise Exception("There was an error: " + str(r.json()['error']))
         return r.json()
     else:
         raise Exception("There was an error: Code " + str(r.status_code))
@@ -19,6 +19,8 @@ def authenticate(user, password, deviceName="Python", deviceOsVersion=platform.p
     data = {"username": user, "password": password}
     r = requests.post("https://latch.elevenpaths.com/control/1.8/authenticate", headers=headers, data=data)
     if r.status_code == 200:
+        if "error" in r.json():
+            raise Exception("There was an error: " + str(r.json()['error']))
         return r.cookies.get("PATH2_SESSION")
     else:
         raise Exception("There was an error: Code " + str(r.status_code))
@@ -32,6 +34,8 @@ def register(name, email, password, deviceName="Python", deviceOsVersion=platfor
     data = {"password": password, "terms": "true", "communicationsAllowed": communicationsAllowed, "passwordCheck": password, "name": name, "email": email}
     r = requests.post("https://latch.elevenpaths.com/www/registerNative", headers=headers, data=data)
     if r.status_code == 200:
+        if "error" in r.json():
+            raise Exception("There was an error: " + str(r.json()['error']))
         return
     else:
         raise Exception("There was an error: Code " + str(r.status_code))
@@ -91,7 +95,7 @@ class app:
         r = requests.post("https://latch.elevenpaths.com/control/1.8/update", headers=self.headers, cookies=self.cookies, data=data)
         if r.status_code == 200:
             if "error" in r.json():
-                raise Exception("Session was closed")
+                raise Exception("There was an error: " + str(r.json()['error']))
             return
         else:
             raise Exception("There was an error: Code " + str(r.status_code))
@@ -100,7 +104,7 @@ class app:
         fromUnixTime = fromDate.timestamp()
         toUnixTime = toDate.timestamp()
         url = "https://latch.elevenpaths.com/control/1.8/history/" + latchCode + "/" + fromUnixTime + "/" + toUnixTime
-        self.makeAuthedGetRequest(url)
+        json = self.makeAuthedGetRequest(url)
         data = json['data']
         return data
 
@@ -117,7 +121,7 @@ class app:
         r = requests.post("https://latch.elevenpaths.com/control/1.8/totp", headers=self.headers, cookies=self.cookies, data=data)
         if r.status_code == 200:
             if "error" in r.json():
-                raise Exception("Session was closed")
+                raise Exception("There was an error: " + str(r.json()['error']))
             return r.json()["data"]
         else:
             raise Exception("There was an error: Code " + str(r.status_code))
@@ -126,7 +130,7 @@ class app:
         r = requests.delete("https://latch.elevenpaths.com/control/1.8/totp/" + latchCode, headers=self.headers, cookies=self.cookies)
         if r.status_code == 200:
             if "error" in r.json():
-                raise Exception("Session was closed")
+                raise Exception("There was an error: " + str(r.json()['error']))
             return
         else:
             raise Exception("There was an error: Code " + str(r.status_code))
@@ -135,7 +139,7 @@ class app:
         r = requests.delete("https://latch.elevenpaths.com/control/1.8/sessions/" + sessionCode, headers=self.headers, cookies=self.cookies)
         if r.status_code == 200:
             if "error" in r.json():
-                raise Exception("Session was closed")
+                raise Exception("There was an error: " + str(r.json()['error']))
             return
         else:
             raise Exception("There was an error: Code " + str(r.status_code))
