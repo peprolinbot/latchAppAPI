@@ -132,8 +132,6 @@ class app:
         return data
     
     def addTotp(self, name, accountName, secret):
-        headers = {'X-Client-Version': 'Android/2.2.4'}
-        cookies =  {"PATH2_SESSION": self.PATH2_SESSION}
         data = {"name": name, "secret": secret, "accountName": accountName}
         r = requests.post("https://latch.elevenpaths.com/control/1.8/totp", headers=self.headers, cookies=self.cookies, data=data)
         if r.status_code == 200:
