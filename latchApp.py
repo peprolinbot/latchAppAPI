@@ -34,9 +34,26 @@ def register(name, email, password, deviceName="Python", deviceOsVersion=platfor
     data = {"password": password, "terms": "true", "communicationsAllowed": communicationsAllowed, "passwordCheck": password, "name": name, "email": email}
     r = requests.post("https://latch.elevenpaths.com/www/registerNative", headers=headers, data=data)
     if r.status_code == 200:
-        if "error" in r.json():
-            raise Exception("There was an error: " + str(r.json()['error']))
-        return
+        try:
+            if "error" in r.json():
+                raise Exception("There was an error: " + str(r.json()['error']))
+            return
+        except:
+            pass
+    else:
+        raise Exception("There was an error: Code " + str(r.status_code))
+
+def changePassword(email, deviceName="Python", deviceOsVersion=platform.python_version()):
+    headers = {'X-Client-Version': 'Android/2.2.4', 'X-device': deviceName, 'X-os-version': deviceOsVersion}
+    data = {"email": email}
+    r = requests.post("https://latch.elevenpaths.com/www/requestPasswordResetMobile", headers=headers, data=data)
+    if r.status_code == 200:
+        try:
+            if "error" in r.json():
+                raise Exception("There was an error: " + str(r.json()['error']))
+            return
+        except:
+            pass
     else:
         raise Exception("There was an error: Code " + str(r.status_code))
 
