@@ -164,7 +164,10 @@ class app:
         self.makeAuthedGetRequest(url)
 
 def totpTo2FAUBPortsJson(latchTotps):
-    date = datetime.now().strftime("%a. %b. %d %H:%M:%S %Y %Z%z")
+    timeZone = datetime.now().strftime("%Z%z")
+    if timeZone == "":
+        timeZone = "UTC+0000" #Sometimes timezone is none so need this fora voiding errors
+    date = datetime.now().strftime(f"%a. %b. %d %H:%M:%S %Y {timeZone}")
     totpsJson = {"keys":[]}
     for totp in latchTotps:
         totp = latchTotps[totp]
@@ -175,4 +178,5 @@ def totpTo2FAUBPortsJson(latchTotps):
         prepared = {"added":date,"description":totp["customName"],"keyJSON":"otpauth://totp/"+ totp["customName"] +":"+ totp["accountName"] +"?issuer="+ totp["customName"] +"&secret="+ totp["secret"] +"&algorithm="+totp["algorithm"]+"&digits="+ str(totp["digits"]) +"&period="+ str(totp["period"])}
         prepared["keyJSON"] = prepared["keyJSON"].replace(" ", "%20")
         totpsJson["keys"].append(prepared)
+    totpsJson = str(totpsJson).replace("'", "\"")
     return totpsJson
