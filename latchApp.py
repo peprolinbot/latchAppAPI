@@ -178,5 +178,13 @@ def totpTo2FAUBPortsJson(latchTotps):
         prepared = {"added":date,"description":totp["customName"],"keyJSON":"otpauth://totp/"+ totp["customName"] +":"+ totp["accountName"] +"?issuer="+ totp["customName"] +"&secret="+ totp["secret"] +"&algorithm="+totp["algorithm"]+"&digits="+ str(totp["digits"]) +"&period="+ str(totp["period"])}
         prepared["keyJSON"] = prepared["keyJSON"].replace(" ", "%20")
         totpsJson["keys"].append(prepared)
-    totpsJson = str(totpsJson).replace("'", "\"")
+    totpsJson = json.dumps(totpsJson)#str(totpsJson).replace("'", "\"")
     return totpsJson
+
+def totpToUrls(latchTotps): # Theese can be encoded (one by one) in a QR for scanning with any app
+    data = json.loads(totpTo2FAUBPortsJson(latchTotps))
+    urls = []
+    for totp in data["keys"]:
+        urls.append(totp["keyJSON"])
+    return urls
+
